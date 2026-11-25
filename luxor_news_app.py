@@ -17,7 +17,7 @@ from email.utils import parsedate_to_datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PORT = int(os.environ.get("PORT", "8000"))
-VERSION = 3
+VERSION = 4
 HOSTED = any(os.environ.get(k) for k in ("RENDER", "RAILWAY_ENVIRONMENT", "FLY_APP_NAME", "K_SERVICE", "HOSTED"))
 HOST = "0.0.0.0" if (HOSTED or "--lan" in sys.argv or os.environ.get("LAN")) else "127.0.0.1"
 import base64, socket
@@ -851,6 +851,21 @@ if __name__ == "__main__":
         k = sys.argv.index("--update-url")
         open(UPDATE_FILE, "w", encoding="utf-8").write(sys.argv[k + 1].strip())
         log("تم حفظ رابط التحديث. شغّل البرنامج من جديد.")
+        sys.exit(0)
+    if "--publish" in sys.argv:
+        # وضع GitHub Pages: يقرأ news.json السابق ويضيف الجديد ثم يحفظه
+        pub = os.path.join(HERE, "news.json")
+        try:
+            old = json.load(open(pub, encoding="utf-8")).get("news", [])
+            STATE["items"] = {n["id"]: n for n in old if n.get("id")}
+        except Exception:
+            pass
+        refresh_once()
+        snap = snapshot()
+        with open(pub + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(snap, f, ensure_ascii=False)
+        os.replace(pub + ".tmp", pub)
+        log("تم حفظ news.json:", len(snap["news"]), "خبرا")
         sys.exit(0)
     if "--once" in sys.argv:
         refresh_once()
