@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: luxor-news
+    runtime: python
+    plan: free
+    buildCommand: "echo build ok"
+    startCommand: "python luxor_news_app.py"
+    healthCheckPath: /
+    envVars:
+      - key: HOSTED
+        value: "1"
+      - key: PYTHON_VERSION
+        value: "3.12.3"
